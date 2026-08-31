@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String?
+  name      String
+  googleId  String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  dataRooms  DataRoom[]
+  folders    Folder[]
+  files      File[]
+  shares     Share[]
+  sharedWith SharedAccess[]
+
+  @@map("users")
+}
+
+model DataRoom {
+  id        String     @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  folders   Folder[]
+  files     File[]
+  shares    Share[]
+
+  @@map("data_rooms")
+}
+
+model Folder {
+  id           String     @id @default(cuid())
+  name         String
+  dataRoomId   String
+  dataRoom     DataRoom   @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  parentId     String?
+  parent       Folder?    @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  ownerId      String
+  owner        User       @relation(fields: [ownerId], references: [id])
+
+  // Relations
+  children     Folder[]   @relation("FolderChildren")
+  files        File[]
+  shares       Share[]
+
+  @@unique([dataRoomId, parentId, name])
+  @@map("folders")
+}
+
+model File {
+  id           String     @id @default(cuid())
+  name         String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String     // local path or URL
+  dataRoomId   String
+  dataRoom     DataRoom   @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  folderId     String?
+  folder       Folder?    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  ownerId      String
+  owner        User       @relation(fields: [ownerId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  versions     FileVersion[]
+  shares       Share[]
+
+  @@map("files")
+}
+
+model FileVersion {
+  id        String   @id @default(cuid())
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  path      String
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@map("file_versions")
+}
+
+model Share {
+  id              String        @id @default(cuid())
+  type            String        // "public" or "permissioned"
+  token           String?       @unique // for public links
+  dataRoomId      String?
+  dataRoom        DataRoom?     @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  folderId        String?
+  folder          Folder?       @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  fileId          String?
+  file            File?         @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  ownerId         String
+  owner           User          @relation(fields: [ownerId], references: [id])
+  createdAt       DateTime      @default(now())
+  expiresAt       DateTime?
+
+  // Relations
+  sharedWith      SharedAccess[]
+
+  @@map("shares")
+}
+
+model SharedAccess {
+  id       String  @id @default(cuid())
+  shareId  String
+  share    Share   @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shareId, userId])
+  @@map("shared_access")
+}

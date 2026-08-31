@@ -1,0 +1,30 @@
+.file-upload {
+  border: 2px dashed #667eea;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  background: white;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.file-upload:hover {
+  background: #f0f0ff;
+  border-color: #764ba2;
+}
+
+.file-upload.active {
+  background: #667eea;
+  color: white;
+  border-color: white;
+}
+
+.file-upload p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.file-upload.active p {
+  color: white;
+}
