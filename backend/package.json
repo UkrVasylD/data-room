@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "migrate": "prisma migrate dev",
     "migrate:prod": "prisma migrate deploy",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma db push --skip-generate || true"
   },
   "keywords": [],
   "author": "",
